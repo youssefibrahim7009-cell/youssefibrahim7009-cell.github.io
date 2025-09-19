@@ -1,0 +1,2728 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="نظام تنظيم الوقت الذكي للدراسة والعمل">
+  <meta name="theme-color" content="#009688">
+  <title>SmartStudy - نظام تنظيم الوقت الذكي</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --primary: #009688;
+      --primary-dark: #00796b;
+      --primary-light: #b2dfdb;
+      --accent: #ff5722;
+      --text: #333;
+      --light: #f5f5f5;
+      --white: #ffffff;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+      --transition: all 0.3s ease;
+      --error: #f44336;
+      --warning: #ff9800;
+      --success: #4caf50;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      color: var(--text);
+      min-height: 100vh;
+      direction: rtl;
+      overflow-x: hidden;
+      padding-bottom: 70px;
+    }
+
+    /* شاشة الترحيب */
+    .welcome-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      transition: transform 0.8s ease, opacity 0.8s ease;
+    }
+    
+    .welcome-content {
+      text-align: center;
+      color: white;
+      max-width: 600px;
+      padding: 2rem;
+      animation: fadeIn 1s ease;
+    }
+    
+    .welcome-logo {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      color: white;
+      animation: pulse 2s infinite;
+    }
+    
+    .welcome-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+    
+    .welcome-text {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    
+    .start-btn {
+      background: white;
+      color: var(--primary);
+      padding: 1rem 2.5rem;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
+    
+    .start-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    header {
+      background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--white);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: none;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .logo i {
+      font-size: 1.8rem;
+    }
+
+    .logo h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .nav-link {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+    
+    .nav-link:hover, .nav-link.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn {
+      background: var(--white);
+      color: var(--primary);
+      padding: 0.5rem 1.2rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .btn-icon {
+      padding: 0.5rem;
+      border-radius: 50%;
+    }
+    
+    .login-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: none;
+    }
+    
+    /* صفحات التطبيق */
+    .page {
+      display: none;
+      animation: fadeIn 0.8s ease;
+      min-height: 70vh;
+    }
+    
+    .page.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: var(--white);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: var(--transition);
+      direction: rtl;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.2);
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #777;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .subject-card {
+      background: var(--light);
+      border-radius: var(--radius);
+      padding: 1rem;
+      border-left: 4px solid var(--primary);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .subject-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--primary);
+    }
+
+    .subject-card:hover {
+      transform: translateX(-5px);
+      background: var(--primary-light);
+    }
+
+    .subject-card h4 {
+      margin-bottom: 0.5rem;
+      color: var(--primary-dark);
+    }
+
+    .subject-card .type {
+      background: var(--primary);
+      color: var(--white);
+      padding: 0.3rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      display: inline-block;
+    }
+
+    .time-indicator {
+      margin-top: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+    }
+
+    .time-indicator i {
+      color: var(--accent);
+    }
+    
+    .subject-image {
+      width: 100%;
+      height: 150px;
+      background: #e0f7fa;
+      border-radius: var(--radius);
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    
+    .subject-image img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    .subject-card:hover .subject-image img {
+      transform: scale(1.05);
+    }
+    
+    .profile-image {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: #e0f7fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 0 auto;
+      border: 3px solid var(--primary);
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .profile-image img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+    }
+    
+    .profile-image i {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      color: var(--primary);
+    }
+
+    .chart-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .circle-chart {
+      width: 280px;
+      height: 280px;
+      position: relative;
+      margin: 1rem auto;
+    }
+
+    .circle-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--light);
+      border: 10px solid var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .circle-progress {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      clip: rect(0px, 280px, 280px, 140px);
+    }
+
+    .circle-fill {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      clip: rect(0px, 140px, 280px, 0px);
+      transform: rotate(0deg);
+      transition: transform 1.5s ease;
+    }
+
+    .circle-overlay {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: var(--white);
+      border-radius: 50%;
+      top: 40px;
+      left: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 1.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+    }
+
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+    }
+
+    .alarms {
+      background: linear-gradient(to bottom, #fff3e0, #ffecb3);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .alarm-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .alarm-btn {
+      flex: 1;
+      min-width: 150px;
+      padding: 1rem;
+      border-radius: var(--radius);
+      background: var(--white);
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    .alarm-btn:hover {
+      transform: translateY(-5px);
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .alarm-btn i {
+      font-size: 1.8rem;
+    }
+
+    .settings {
+      background: var(--light);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--white);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card i {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to right, var(--primary-dark), var(--primary));
+      color: var(--white);
+      padding: 1rem;
+      text-align: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .creators {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 0.5rem;
+    }
+
+    .creator {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 0.3rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+    }
+    
+    /* رسائل الوقت */
+    .time-message {
+      padding: 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .time-message.error {
+      background: #ffebee;
+      border-left: 4px solid var(--error);
+      color: var(--error);
+    }
+    
+    .time-message.warning {
+      background: #fff3e0;
+      border-left: 4px solid var(--warning);
+      color: var(--warning);
+    }
+    
+    .time-message i {
+      font-size: 1.5rem;
+    }
+    
+    /* صفحة المنبهات الجديدة */
+    .alarm-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .alarm-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .alarm-icon {
+      width: 50px;
+      height: 50px;
+      background: var(--primary-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    
+    .alarm-details h4 {
+      margin-bottom: 0.3rem;
+      color: var(--primary-dark);
+    }
+    
+    .alarm-details p {
+      color: #666;
+    }
+    
+    .alarm-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .alarm-time {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .custom-ringtone {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    
+    /* القائمة الجانبية للهواتف */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .mobile-nav {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 280px;
+      height: 100%;
+      background: var(--primary-dark);
+      z-index: 2000;
+      transition: var(--transition);
+      padding: 1rem;
+      overflow-y: auto;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+    }
+    
+    .mobile-nav.active {
+      right: 0;
+    }
+    
+    .mobile-nav .nav-links {
+      flex-direction: column;
+      margin-top: 2rem;
+    }
+    
+    .mobile-nav .user-actions {
+      flex-direction: column;
+      margin-top: 1rem;
+      gap: 10px;
+    }
+    
+    .close-mobile-menu {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .mobile-nav-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1999;
+      display: none;
+    }
+    
+    .mobile-nav-overlay.active {
+      display: block;
+    }
+
+    /* تحسينات الدائرة البيانية */
+    .pie-chart-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    /* نظام المنبهات الذكية */
+    .alarm-status {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-top: 1.5rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    
+    .alarm-status i {
+      font-size: 2rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    
+    /* زر التثبيت */
+    #installButton {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10000;
+      background: #962a00;
+      color: rgb(255, 255, 255);
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    
+    #installButton:hover {
+      background: #00796b;
+      transform: translateY(-2px);
+    }
+    
+    /* تحسينات جديدة */
+    .performance-section {
+      background: linear-gradient(to right, #e0f7fa, #b2ebf2);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .progress-bar {
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 5px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 5px;
+      transition: width 0.5s ease;
+    }
+    
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .analytics-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    
+    .analytics-card i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    
+    .pwa-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+    
+    .pwa-feature {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    
+    .pwa-feature i {
+      font-size: 2rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    
+    .app-install-section {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    
+    /* صفحة المذكرة اليومية */
+    .diary-entry {
+      background: #fff8e1;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    
+    .diary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .ai-response {
+      background: #e3f2fd;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .ai-response h4 {
+      color: var(--primary-dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .ai-response p {
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .nav-container {
+        flex-direction: row;
+        gap: 15px;
+      }
+      
+      .nav-links {
+        display: none;
+      }
+      
+      .user-actions {
+        display: none;
+      }
+      
+      .mobile-menu-btn {
+        display: block;
+      }
+      
+      .circle-chart {
+        width: 220px;
+        height: 220px;
+      }
+      
+      .circle-overlay {
+        width: 160px;
+        height: 160px;
+        top: 30px;
+        left: 30px;
+      }
+      
+      .alarm-buttons {
+        flex-direction: column;
+      }
+      
+      .welcome-title {
+        font-size: 2rem;
+      }
+      
+      .image-gallery {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .pie-chart {
+        width: 220px;
+        height: 220px;
+      }
+      
+      .pie-center {
+        width: 140px;
+        height: 140px;
+      }
+      
+      .pwa-feature {
+        min-width: 100%;
+      }
+      
+      /* تحسينات القائمة الجانبية للهواتف */
+      .mobile-nav {
+        width: 85%;
+                right: -85%;
+      }
+      
+      .mobile-nav.active {
+        right: 0;
+      }
+      
+      .mobile-nav .nav-links {
+        margin-top: 3rem;
+      }
+      
+      .mobile-nav .user-actions {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        padding: 0 1rem;
+      }
+      
+      .mobile-nav .logo {
+        justify-content: center;
+        margin-top: 1rem;
+      }
+    }
+    
+    /* الرسوم المتحركة */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+    
+    /* تخصيصات جديدة */
+    .print-schedule {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius);
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    
+    .schedule-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    
+    .schedule-logo i {
+      font-size: 2rem;
+      color: white;
+    }
+    
+    .schedule-logo h2 {
+      font-size: 1.5rem;
+    }
+    
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .schedule-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    
+    .schedule-card h4 {
+      color: var(--primary-dark);
+      margin-bottom: 1rem;
+    }
+    
+    .schedule-card p {
+      color: #555;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <!-- شاشة الترحيب -->
+  <div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-content">
+      <i class="fas fa-graduation-cap welcome-logo"></i>
+      <h1 class="welcome-title">SmartStudy - نظام تنظيم الوقت الذكي</h1>
+      <p class="welcome-text">
+        تطبيق متكامل لتنظيم وقت الدراسة والعمل، يساعدك على تحقيق التوازن بين مسؤولياتك وأهدافك الشخصية.
+         صمم جدولك المثالي واستفد من وقتك بأفضل طريقة ممكنة! التطبيق يعمل الآن بكامل إمكانياته على جميع الأجهزة.
+         إنه يعمل الان على أجهزة الحاسب الالي 
+      </p>
+      <button class="start-btn" onclick="startApp()">
+        <i class="fas fa-play"></i> ابدأ الآن
+      </button>
+      <p style="margin-top: 20px; color: rgba(255,255,255,0.8);">
+         نتقدم بجزيل الشكر و التقدير للدكتور محمد زكريا لدعمه الكريم وثقته الغاليه في تنفيذ المشروع
+      </p>
+    </div>
+  </div>
+  
+  <!-- زر تثبيت التطبيق -->
+  <button id="installButton">
+    <i class="fas fa-download"></i> تثبيت التطبيق
+  </button>
+  
+   <!-- منبه حقيقي -->
+  <div class="real-alarm" id="realAlarm" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="alarm-content" style="background: white; padding: 2rem; border-radius: var(--radius); text-align: center; max-width: 400px;">
+      <i class="fas fa-bell" id="alarmIcon" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+      <h2 id="alarmTitle">تنبيه!</h2>
+      <p id="alarmMessage">حان وقت المذاكرة الآن، ركز واستعد للدراسة.</p>
+      <audio id="alarmSound" loop></audio>
+      <div class="alarm-actions" style="display: flex; gap: 10px; margin-top: 1.5rem;">
+        <button class="btn btn-primary" onclick="stopAlarm()">
+          <i class="fas fa-check"></i> موافق
+        </button>
+        <button class="btn" onclick="snoozeAlarm()">
+          <i class="fas fa-clock"></i> تأجيل 5 دقائق
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- نافذة اختيار الصورة -->
+  <div class="image-selector" id="imageSelector" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="image-selector-content" style="background: white; padding: 2rem; border-radius: var(--radius); max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary);">اختر صورة من المعرض</h2>
+      <div style="text-align: center; margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+          <i class="fas fa-upload"></i> رفع صورة جديدة
+        </button>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+      </div>
+      
+      <div class="image-gallery" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+        <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="صورة 1" class="gallery-image" onclick="selectImage(this)" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius); cursor: pointer;">
+        <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="صورة 2" class="gallery-image" onclick="selectImage(this)" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius); cursor: pointer;">
+        <img src="https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="صورة 3" class="gallery-image" onclick="selectImage(this)" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius); cursor: pointer;">
+        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="صورة 4" class="gallery-image" onclick="selectImage(this)" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius); cursor: pointer;">
+        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="صورة 5" class="gallery-image" onclick="selectImage(this)" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius); cursor: pointer;">
+        <img src="https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="صورة 6" class="gallery-image" onclick="selectImage(this)" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius); cursor: pointer;">
+      </div>
+      
+      <div style="text-align: center; margin-top: 1.5rem;">
+        <button class="btn" onclick="closeImageSelector()">
+          <i class="fas fa-times"></i> إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- القائمة الجانبية للهواتف -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileMenu()"></div>
+  <div class="mobile-nav" id="mobileNav">
+    <button class="close-mobile-menu" onclick="closeMobileMenu()">
+      <i class="fas fa-times"></i>
+    </button>
+    
+    <div class="logo">
+      <i class="fas fa-graduation-cap"></i>
+      <h1>SmartStudy</h1>
+    </div>
+    
+    <div class="nav-links">
+      <a href="#" class="nav-link active" data-page="personal" onclick="switchPage('personal'); closeMobileMenu()">البيانات الشخصية</a>
+      <a href="#" class="nav-link" data-page="subjects" onclick="switchPage('subjects'); closeMobileMenu()">المواد والأنشطة</a>
+      <a href="#" class="nav-link" data-page="schedule" onclick="switchPage('schedule'); closeMobileMenu()">الجدول الزمني</a>
+      <a href="#" class="nav-link" data-page="alarms" onclick="switchPage('alarms'); closeMobileMenu()">المنبهات</a>
+      <a href="#" class="nav-link" data-page="diary" onclick="switchPage('diary'); closeMobileMenu()">المذكرة اليومية</a>
+      <a href="#" class="nav-link" data-page="settings" onclick="switchPage('settings'); closeMobileMenu()">الإعدادات</a>
+    </div>
+    
+    <div class="user-actions">
+      <button class="btn login-btn" id="userNameBtnMobile">
+        <i class="fas fa-user"></i> <span id="userNameTextMobile">المستخدم</span>
+      </button>
+      <button class="btn btn-primary" onclick="exportSchedule()">
+        <i class="fas fa-download"></i>  تصدير الملف
+      </button>
+    </div>
+    
+    <div style="position: absolute; bottom: 20px; left: 0; right: 0; padding: 0 1rem; text-align: center; color: rgba(255,255,255,0.7);">
+    </div>
+  </div>
+
+  <header id="header">
+    <div class="nav-container">
+      <div class="logo">
+        <i class="fas fa-graduation-cap"></i>
+        <h1>SmartStudy</h1>
+      </div>
+      
+      <div class="nav-links">
+        <a href="#" class="nav-link active" data-page="personal">البيانات الشخصية</a>
+        <a href="#" class="nav-link" data-page="subjects">المواد والأنشطة</a>
+        <a href="#" class="nav-link" data-page="schedule">الجدول الزمني</a>
+        <a href="#" class="nav-link" data-page="alarms">المنبهات</a>
+        <a href="#" class="nav-link" data-page="diary">المذكرة اليومية</a>
+        <a href="#" class="nav-link" data-page="settings">الإعدادات</a>
+      </div>
+      
+      <div class="user-actions">
+        <button class="btn login-btn" id="userNameBtn">
+          <i class="fas fa-user"></i> <span id="userNameText">المستخدم</span>
+        </button>
+        <button class="btn btn-primary" onclick="exportSchedule()">
+          <i class="fas fa-download"></i> تصدير
+        </button>
+      </div>
+      
+      <button class="mobile-menu-btn" onclick="openMobileMenu()">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="container" id="appContainer">
+    <!-- صفحة البيانات الشخصية -->
+    <div class="page active" id="personal-page">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-user"></i>
+          <h2>البيانات الشخصية</h2>
+        </div>
+        <div class="card-body">
+          <div style="text-align: center; margin-bottom: 2rem;">
+            <div class="profile-image" onclick="openImageSelector('profile')">
+              <img src="" alt="الصورة الشخصية" id="profile-img">
+              <i class="fas fa-camera"></i>
+            </div>
+            <h3 style="margin-top: 1rem;" id="username">المستخدم</h3>
+          </div>
+          
+          <div class="grid">
+            <div class="form-group">
+              <label>الاسم الكامل</label>
+              <input type="text" id="userName" placeholder="اكتب اسمك">
+              <i class="fas fa-user input-icon"></i>
+            </div>
+            
+            <div class="form-group">
+              <label>العمر</label>
+              <input type="number" id="userAge" placeholder="أدخل عمرك">
+              <i class="fas fa-birthday-cake input-icon"></i>
+            </div>
+            
+            <div class="form-group">
+              <label>الديانة</label>
+              <select id="religion">
+                <option value="">اختر ديانة</option>
+                <option value="مسلم">مسلم</option>
+                <option value="مسيحي">مسيحي</option>
+                <option value="يهودي">يهودي</option>
+                <option value="أخرى">ديانات أخرى</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>هل أنت طالب أم عامل؟</label>
+              <select id="userType">
+                <option value="">اختر نوع المستخدم</option>
+                <option value="طالب">طالب</option>
+                <option value="عامل">عامل</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="userEmail" placeholder="بريدك الإلكتروني">
+              <i class="fas fa-envelope input-icon"></i>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn btn-primary" onclick="savePersonalData()">
+              <i class="fas fa-save"></i> حفظ البيانات
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 1.5rem; background: #fff8e1;">
+        <div class="card-body">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #ff9800;"></i>
+            <div>
+              <h3>تنبيه هام!</h3>
+              <p>يجب حفظ البيانات بعد إدخالها حتى يتم تخزينها بشكل صحيح.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- صفحة المواد والأنشطة -->
+    <div class="page" id="subjects-page">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-book"></i>
+          <h2>المواد والأنشطة</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>أنواع المواد والمهام:</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+              <div style="background: #2196F3; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem;">
+                <i class="fas fa-star"></i> تخصص (2 ساعة)
+              </div>
+              <div style="background: #4CAF50; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem;">
+                <i class="fas fa-book"></i> أساسي (1 ساعة)
+              </div>
+              <div style="background: #FFC107; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem;">
+                <i class="fas fa-book-open"></i> غير أساسي (30 دقيقة)
+              </div>
+              <div style="background: #9E9E9E; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem;">
+                <i class="fas fa-times-circle"></i> لا يضاف للمجموع (20 دقيقة)
+              </div>
+              <div style="background: #FF5722; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem;">
+                <i class="fas fa-tasks"></i> مهمة (20-120 دقيقة)
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>كم عدد المواد أو المهام اليومية؟</label>
+            <div style="display: flex; gap: 10px;">
+              <input type="number" id="subjectCount" placeholder="أدخل العدد">
+              <button class="btn btn-primary" onclick="generateSubjectInputs()">
+                <i class="fas fa-plus"></i> إدخال التفاصيل
+              </button>
+            </div>
+          </div>
+          
+          <div id="subjectContainer" class="grid" style="margin-top: 1rem;"></div>
+          
+          <div class="form-group">
+            <label>هل تمارس الرياضة؟ كم دقيقة يوميًا؟</label>
+            <input type="number" id="sportMinutes" placeholder="عدد الدقائق">
+            <i class="fas fa-running input-icon"></i>
+          </div>
+          
+          <div class="form-group">
+            <label>عدد ساعات العمل/الدراسة اليومية</label>
+            <input type="number" id="workHours" placeholder="أدخل عدد الساعات">
+            <i class="fas fa-clock input-icon"></i>
+          </div>
+        </div>
+      </div>
+            <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <i class="fas fa-calendar-alt"></i>
+          <h2>إنشاء الجدول</h2>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-primary" style="width: 100%;" onclick="generateStudyPlan()">
+            <i class="fas fa-calendar-alt"></i> إنشاء جدول الدراسة
+          </button>
+          <p style="text-align: center; margin-top: 1rem; color: var(--primary);">
+            بعد إنشاء الجدول، انتقل إلى صفحة "الجدول الزمني" لمشاهدته
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- صفحة الجدول الزمني -->
+    <div class="page" id="schedule-page">
+      <div id="timeMessages"></div>
+      
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-calendar-alt"></i>
+          <h2>جدول اليوم الذكي</h2>
+        </div>
+        <div class="card-body">
+          <div id="studyPlan" class="grid" style="margin-top: 1rem;">
+            <div class="subject-card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+              <i class="fas fa-calendar-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+              <h3>لم تقم بإنشاء جدول بعد</h3>
+              <p>قم بإدخال المواد والأنشطة في صفحة "المواد والأنشطة" ثم اضغط على "إنشاء جدول الدراسة"</p>
+              <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchPage('subjects')">
+                <i class="fas fa-book"></i> الذهاب إلى المواد والأنشطة
+              </button>
+            </div>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-card fade-in">
+              <i class="fas fa-clock"></i>
+              <div class="value" id="totalTime">0 ساعة</div>
+              <div>إجمالي الوقت</div>
+            </div>
+            <div class="stat-card fade-in">
+              <i class="fas fa-book"></i>
+              <div class="value" id="subjectCountValue">0 مواد</div>
+              <div>المواد الدراسية</div>
+            </div>
+            <div class="stat-card fade-in">
+              <i class="fas fa-running"></i>
+              <div class="value" id="sportTime">0 دقيقة</div>
+              <div>الأنشطة الرياضية</div>
+            </div>
+            <div class="stat-card fade-in">
+              <i class="fas fa-clock"></i>
+              <div class="value" id="workTime">0 ساعة</div>
+              <div>العمل/الدراسة</div>
+            </div>
+            <div class="stat-card fade-in">
+              <i class="fas fa-bed"></i>
+              <div class="value" id="sleepTime">0 ساعة</div>
+              <div>النوم</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <i class="fas fa-chart-pie"></i>
+          <h2>توزيع الوقت</h2>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <div class="pie-chart-container">
+              <canvas id="timeChart"></canvas>
+            </div>
+            
+            <div class="legend" id="chartLegend">
+              <div class="legend-item">
+                <div class="legend-color" style="background: #4CAF50;"></div>
+                <span>سيتم عرض المواد هنا</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- صفحة المنبهات الجديدة -->
+    <div class="page" id="alarms-page">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-bell"></i>
+          <h2>إدارة المنبهات</h2>
+        </div>
+        <div class="card-body">
+          <h3><i class="fas fa-music"></i> نغمات التنبيه</h3>
+          
+          <div class="form-group">
+            <label>اختر نغمة التنبيه</label>
+            <select id="ringtoneSelect" onchange="setRingtone(this.value)">
+              <option value="1">نغمة الدراسة</option>
+              <option value="2">نغمة التنبيه</option>
+              <option value="3">نغمة النوم</option>
+            </select>
+          </div>
+          
+          <div class="custom-ringtone">
+            <button class="btn" onclick="document.getElementById('ringtoneFile').click()">
+              <i class="fas fa-mobile-alt"></i> اختيار نغمة من الجهاز
+            </button>
+            <input type="file" id="ringtoneFile" accept="audio/*" style="display: none;" onchange="handleRingtoneUpload(event)">
+            <span id="selectedRingtoneName">لم يتم اختيار نغمة</span>
+          </div>
+          
+          <div class="alarms" style="margin-top: 2rem;">
+            <h3><i class="fas fa-bell"></i> المنبهات الذكية</h3>
+            <p>اضبط منبهاتك لتنظيم وقتك بكفاءة</p>
+            
+            <div class="alarm-buttons">
+              <button class="alarm-btn" onclick="setRealAlarm('study', 'تنبيه المذاكرة', 'fas fa-book', 'حان وقت المذاكرة! ركز واستعد للدراسة.')">
+                <i class="fas fa-book"></i>
+                <span>تنبيه المذاكرة</span>
+              </button>
+              <button class="alarm-btn" onclick="setRealAlarm('sleep', 'تنبيه النوم', 'fas fa-bed', 'وقت النوم! احصل على قسط كافٍ من الراحة لاستعادة نشاطك.')">
+                <i class="fas fa-bed"></i>
+                <span>تنبيه النوم</span>
+              </button>
+              <button class="alarm-btn" onclick="setRealAlarm('pray', 'تنبيه الصلاة', 'fas fa-mosque', 'حان وقت الصلاة! توضأ وأدِ الصلاة في وقتها.')">
+                <i class="fas fa-mosque"></i>
+                <span>تنبيه الصلاة</span>
+              </button>
+              <button class="alarm-btn" onclick="setRealAlarm('sport', 'تنبيه الرياضة', 'fas fa-running', 'وقت الرياضة! انهض ومارس بعض التمارين لتنشيط جسمك.')">
+                <i class="fas fa-running"></i>
+                <span>تنبيه الرياضة</span>
+              </button>
+            </div>
+          </div>
+          <div style="margin-top: 2rem;">
+            <h3><i class="fas fa-history"></i> المنبهات المضافة</h3>
+            <div id="alarmsList">
+              <p style="text-align: center; padding: 2rem; color: #777;">لا توجد منبهات مضافة بعد</p>
+            </div>
+          </div>
+          
+          <div class="alarm-status">
+            <i class="fas fa-bell"></i>
+            <h3>حالة المنبهات</h3>
+            <p id="alarmState">المنبهات نشطة وجاهزة للعمل</p>
+            <button class="btn btn-primary" style="margin-top: 1rem;" onclick="activateStudyAlarms()">
+              <i class="fas fa-power-off"></i> تفعيل منبهات الدراسة التلقائية
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- صفحة المذكرة اليومية -->
+    <div class="page" id="diary-page">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-book-open"></i>
+          <h2>المذكرة اليومية</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>تاريخ اليوم</label>
+            <input type="date" id="diaryDate">
+          </div>
+          <div class="form-group">
+            <label>مذكرة اليوم</label>
+            <textarea id="diaryText" rows="10" placeholder="اكتب ملاحظاتك اليومية هنا..."></textarea>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-primary" onclick="saveDiary()">
+              <i class="fas fa-save"></i> حفظ المذكرة
+            </button>
+            <button class="btn" onclick="askAI()">
+              <i class="fas fa-robot"></i> مساعدة الذكاء الاصطناعي
+            </button>
+          </div>
+          <div id="aiResponse" class="ai-response" style="display: none;">
+            <h4><i class="fas fa-robot"></i> اقتراحات الذكاء الاصطناعي</h4>
+            <p id="aiText"></p>
+          </div>
+          
+          <div id="diaryEntries" style="margin-top: 2rem;">
+            <h3><i class="fas fa-history"></i> المذكرات السابقة</h3>
+            <div id="entriesList">
+              <p style="text-align: center; padding: 2rem; color: #777;">لا توجد مذكرات سابقة</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- صفحة الإعدادات -->
+    <div class="page" id="settings-page">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-cog"></i>
+          <h2>الإعدادات العامة</h2>
+        </div>
+        <div class="card-body">
+          <div class="grid">
+            <div class="form-group">
+              <label>لون السمة</label>
+              <select id="themeColor" onchange="changeTheme(this.value)" style="padding: 12px;">
+                <option value="green">أخضر (افتراضي)</option>
+                <option value="blue">أزرق</option>
+                <option value="purple">أرجواني</option>
+                <option value="orange">برتقالي</option>
+                <option value="red">أحمر</option>
+                <option value="pink">زهري</option>
+                <option value="teal">أخضر مزرق</option>
+                <option value="indigo">نيلي</option>
+                <option value="deep-purple">بنفسجي غامق</option>
+                <option value="amber">عنبري</option>
+                <option value="brown">بني</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>لغة التطبيق</label>
+              <select>
+                <option>العربية</option>
+              </select>
+            </div>
+              
+            <div class="form-group">
+              <label>تذكير بوقت الصلاة</label>
+              <select id="prayerReminder">
+                <option>نعم</option>
+                <option>لا</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings" style="margin-top: 2rem;">
+            <h3><i class="fas fa-database"></i> إدارة البيانات</h3>
+            <div style="display: flex; gap: 15px; margin-top: 1.5rem; justify-content: center; flex-wrap: wrap;">
+              <button class="btn" onclick="saveData()">
+                <i class="fas fa-save"></i> حفظ البيانات
+              </button>
+              <button class="btn btn-primary" onclick="clearData()">
+                <i class="fas fa-trash"></i> حذف جميع المهام
+              </button>
+              <button class="btn" onclick="resetApp()">
+                <i class="fas fa-redo"></i> إعادة تعيين التطبيق
+              </button>
+            </div>
+          </div>
+          
+          <!-- قسم جديد: ميزات PWA -->
+          <div class="app-install-section">
+            <h3><i class="fas fa-mobile-alt"></i> تثبيت التطبيق على جهازك</h3>
+            <p>احصل على تجربة أفضل من خلال تثبيت التطبيق على جهازك</p>
+            <button id="installAppButton" class="btn" style="background: white; color: var(--primary); margin-top: 1rem;">
+              <i class="fas fa-download"></i> تثبيت التطبيق
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="footer">
+    <h4>👨‍💻 فريق تطوير الموقع:</h4>
+    <div class="creators">
+      <div class="creator">رمضان فتحي</div>
+      <div class="creator">يوسف الشربيني</div>
+      <div class="creator">عمر باشا</div>
+      <div class="creator">حسام محمد</div>
+      <div class="creator">محمد الخضرجي</div>
+    </div>
+  </footer>
+
+  <script>
+    // بيانات المواد الافتراضية
+    const defaultSubjects = [
+      { name: "", type: "أساسي", duration: 60, img: "https://images.unsplash.com/photo-1497636577773-f1231844b336?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" }
+    ];
+    
+    // أنواع المواد والألوان المرتبطة بها
+    const subjectTypes = {
+      "تخصص": { color: "#2196F3", duration: 120 },
+      "أساسي": { color: "#4CAF50", duration: 60 },
+      "غير أساسي": { color: "#FFC107", duration: 30 },
+      "لا يضاف للمجموع": { color: "#9E9E9E", duration: 20 },
+      "مهمة": { color: "#FF5722", duration: 30 }, // سيتم تعديل المدة من قبل المستخدم
+      "راحة": { color: "#9C27B0", duration: 30 }
+    };
+    
+    // نغمات التنبيه
+    const ringtones = {
+      "1": "https://www.soundjay.com/buttons/sounds/button-09.mp3",
+      "2": "https://www.soundjay.com/buttons/sounds/button-09.mp3",
+      "3": "https://www.soundjay.com/buttons/sounds/button-09.mp3"
+    };
+    
+    // شاشة الترحيب
+    function startApp() {
+      const welcomeScreen = document.getElementById('welcomeScreen');
+      welcomeScreen.style.opacity = '0';
+      welcomeScreen.style.pointerEvents = 'none';
+      
+      setTimeout(() => {
+        document.getElementById('header').style.display = 'block';
+        document.getElementById('appContainer').style.display = 'block';
+        document.getElementById('footer').style.display = 'block';
+        document.body.style.overflow = 'auto';
+      }, 800);
+    }
+    
+    // فتح وإغلاق القائمة الجانبية للهواتف
+    function openMobileMenu() {
+      document.getElementById('mobileNav').classList.add('active');
+      document.getElementById('mobileNavOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeMobileMenu() {
+      document.getElementById('mobileNav').classList.remove('active');
+      document.getElementById('mobileNavOverlay').classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+    
+    // تبديل الصفحات
+    function switchPage(pageId) {
+      // إخفاء جميع الصفحات
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      
+      // إزالة النشاط من جميع روابط التنقل
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      
+      // إظهار الصفحة المطلوبة
+      document.getElementById(`${pageId}-page`).classList.add('active');
+      
+      // إضافة النشاط لرابط التنقل
+      document.querySelector(`.nav-link[data-page="${pageId}"]`).classList.add('active');
+    }
+    
+    // إعداد التنقل
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const pageId = this.getAttribute('data-page');
+        switchPage(pageId);
+      });
+    });
+    
+    // حفظ البيانات الشخصية
+    function savePersonalData() {
+      const userName = document.getElementById('userName').value;
+      if (!userName) {
+        alert('الرجاء إدخال اسمك أولاً');
+        return;
+      }
+      
+      document.getElementById('username').textContent = userName;
+      document.getElementById('userNameText').textContent = userName;
+      document.getElementById('userNameTextMobile').textContent = userName;
+      
+      // تخزين الاسم في localStorage
+      localStorage.setItem('userName', userName);
+      
+      alert(`تم حفظ بيانات ${userName} بنجاح!`);
+    }
+    
+    // عند التحميل، استرجاع اسم المستخدم إذا كان محفوظاً
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedName = localStorage.getItem('userName');
+      if (savedName) {
+        document.getElementById('userName').value = savedName;
+        document.getElementById('username').textContent = savedName;
+        document.getElementById('userNameText').textContent = savedName;
+        document.getElementById('userNameTextMobile').textContent = savedName;
+      }
+    });
+    
+    // فتح نافذة اختيار الصورة
+    function openImageSelector(type) {
+      document.getElementById('imageSelector').style.display = 'flex';
+    }
+    
+    // إغلاق نافذة اختيار الصورة
+    function closeImageSelector() {
+      document.getElementById('imageSelector').style.display = 'none';
+    }
+    
+    // اختيار صورة من المعرض
+    function selectImage(imgElement) {
+      const src = imgElement.src;
+      document.getElementById('profile-img').src = src;
+      closeImageSelector();
+      alert('تم تغيير الصورة الشخصية بنجاح!');
+    }
+    
+    // رفع صورة جديدة
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('profile-img').src = e.target.result;
+          closeImageSelector();
+          alert('تم رفع الصورة بنجاح!');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    // توليد حقول المواد
+    function generateSubjectInputs() {
+      const count = parseInt(document.getElementById('subjectCount').value) || 1;
+      const container = document.getElementById('subjectContainer');
+      container.innerHTML = '';
+      
+      for (let i = 0; i < count; i++) {
+        const subject = defaultSubjects[i] || { 
+          name: "", 
+          type: "أساسي", 
+          duration: 60,
+          img: "https://images.unsplash.com/photo-1497636577773-f1231844b336?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
+        };
+        
+        container.innerHTML += `
+          <div class="subject-card">
+            <h4>المادة ${i + 1}</h4>
+            <div class="form-group">
+              <input type="text" id="subject${i}" placeholder="اسم المادة أو المهمة" value="${subject.name}">
+            </div>
+            <div class="form-group">
+              <select id="type${i}" onchange="updateDuration(${i})">
+                <option value="">اختر نوع المادة</option>
+                ${Object.keys(subjectTypes).map(type => 
+                  `<option value="${type}" ${type === subject.type ? 'selected' : ''}>${type}</option>`
+                ).join('')}
+              </select>
+            </div>
+            <div class="form-group" id="durationContainer${i}" style="${subject.type === 'مهمة' ? '' : 'display: none;'}">
+              <label>مدة المهمة (دقيقة)</label>
+              <input type="number" id="duration${i}" min="20" max="120" value="${subject.duration}">
+            </div>
+            <div class="time-indicator">
+              <i class="fas fa-clock"></i>
+              <span id="durationText${i}">مدة الدراسة: ${subjectTypes[subject.type].duration} دقيقة</span>
+            </div>
+            <div class="subject-image" onclick="openImageSelector('subject')">
+              <img src="${subject.img}" alt="${subject.name}">
+            </div>
+          </div>
+        `;
+      }
+      
+      container.innerHTML += `
+        <div class="subject-card" style="grid-column: 1 / -1; text-align: center;">
+          <button class="btn btn-primary" style="width: 100%;" onclick="generateStudyPlan()">
+            <i class="fas fa-calendar-alt"></i> إنشاء جدول الدراسة
+          </button>
+        </div>
+      `;
+      
+      // تحديث مدة كل مادة
+      for (let i = 0; i < count; i++) {
+        updateDuration(i);
+      }
+    }
+    
+    // تحديث مدة المادة عند تغيير النوع
+    function updateDuration(index) {
+      const typeSelect = document.getElementById(`type${index}`);
+      if (!typeSelect) return;
+      
+      const durationContainer = document.getElementById(`durationContainer${index}`);
+      const durationText = document.getElementById(`durationText${index}`);
+      
+      if (typeSelect.value === "مهمة") {
+        if (durationContainer) durationContainer.style.display = 'block';
+        if (durationText) durationText.textContent = `مدة المهمة: ${document.getElementById(`duration${index}`).value} دقيقة`;
+      } else {
+        if (durationContainer) durationContainer.style.display = 'none';
+        if (durationText) durationText.textContent = `مدة الدراسة: ${subjectTypes[typeSelect.value]?.duration || 60} دقيقة`;
+      }
+    }
+    
+    // توليد خطة الدراسة
+        function generateStudyPlan() {
+      const count = parseInt(document.getElementById('subjectCount').value) || 1;
+      const container = document.getElementById('studyPlan');
+      const timeMessages = document.getElementById('timeMessages');
+      container.innerHTML = '';
+      timeMessages.innerHTML = '';
+      
+      let totalMinutes = 0;
+      let subjectsData = [];
+      window.studySessions = [];
+      
+      // جمع بيانات المواد
+      for (let i = 0; i < count; i++) {
+        const name = document.getElementById(`subject${i}`)?.value || `المادة ${i + 1}`;
+        const type = document.getElementById(`type${i}`)?.value || "أساسي";
+        let duration = subjectTypes[type]?.duration || 60;
+        
+        if (type === "مهمة") {
+          duration = parseInt(document.getElementById(`duration${i}`)?.value) || 30;
+          if (duration < 20) duration = 20;
+          if (duration > 120) duration = 120;
+        }
+        
+        totalMinutes += duration;
+        
+        const color = subjectTypes[type]?.color || "#4CAF50";
+        const img = defaultSubjects[i]?.img || "https://images.unsplash.com/photo-1497636577773-f1231844b336?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
+        const timeSuggestion = suggestTime(totalMinutes - duration, duration);
+        
+        subjectsData.push({ name, type, duration, color, img, timeSuggestion });
+        // تخزين جلسات الدراسة للمنبهات
+        window.studySessions.push({
+          name: name,
+          start: timeSuggestion.start,
+          end: timeSuggestion.end
+        });
+        
+        const subjectCard = document.createElement('div');
+        subjectCard.className = 'subject-card fade-in';
+        subjectCard.style.borderLeft = `4px solid ${color}`;
+        subjectCard.innerHTML = `
+          <h4>${name}</h4>
+          <div class="type" style="background: ${color}">${type}</div>
+          <div class="time-indicator">
+            <i class="fas fa-clock" style="color: ${color}"></i>
+            <span>${Math.floor(duration / 60)} ساعة ${duration % 60} دقيقة</span>
+          </div>
+          <div class="time-indicator">
+            <i class="fas fa-calendar"></i>
+            <span>الوقت المقترح: ${timeSuggestion.display}</span>
+          </div>
+          <div class="subject-image" onclick="openImageSelector('subject')">
+            <img src="${img}" alt="${name}">
+          </div>
+        `;
+        container.appendChild(subjectCard);
+      }
+      
+      // إضافة وقت العمل/الدراسة اليومية
+      const workHours = parseInt(document.getElementById('workHours').value) || 0;
+      if (workHours > 0) {
+        const workMinutes = workHours * 60;
+        const workTimeSuggestion = suggestTime(totalMinutes, workMinutes);
+        totalMinutes += workMinutes;
+        
+        const workCard = document.createElement('div');
+        workCard.className = 'subject-card fade-in';
+        workCard.style.borderLeft = '4px solid #FF5722';
+        workCard.innerHTML = `
+          <h4>العمل والدراسة</h4>
+          <div class="type" style="background: #FF5722">إجمالي يومي</div>
+          <div class="time-indicator">
+            <i class="fas fa-clock" style="color: #FF5722"></i>
+            <span>${workHours} ساعة</span>
+          </div>
+          <div class="time-indicator">
+            <i class="fas fa-calendar"></i>
+            <span>الوقت المقترح: ${workTimeSuggestion.display}</span>
+          </div>
+        `;
+        container.appendChild(workCard);
+        
+        window.studySessions.push({
+          name: "العمل والدراسة",
+          start: workTimeSuggestion.start,
+          end: workTimeSuggestion.end
+        });
+      }
+      
+      // إضافة وقت الرياضة
+      const sportMinutes = parseInt(document.getElementById('sportMinutes').value) || 0;
+      if (sportMinutes > 0) {
+        const sportTimeSuggestion = suggestTime(totalMinutes, sportMinutes);
+        totalMinutes += sportMinutes;
+        
+        const sportCard = document.createElement('div');
+        sportCard.className = 'subject-card fade-in';
+        sportCard.style.borderLeft = '4px solid #9C27B0';
+        sportCard.innerHTML = `
+          <h4>الرياضة والنشاط البدني</h4>
+          <div class="type" style="background: #9C27B0">نشاط صحي</div>
+          <div class="time-indicator">
+            <i class="fas fa-clock" style="color: #9C27B0"></i>
+            <span>${sportMinutes} دقيقة</span>
+          </div>
+          <div class="time-indicator">
+            <i class="fas fa-calendar"></i>
+            <span>الوقت المقترح: ${sportTimeSuggestion.display}</span>
+          </div>
+          <div class="subject-image" onclick="openImageSelector('subject')">
+            <img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="الرياضة">
+          </div>
+        `;
+        container.appendChild(sportCard);
+        
+        window.studySessions.push({
+          name: "الرياضة",
+          start: sportTimeSuggestion.start,
+          end: sportTimeSuggestion.end
+        });
+      }
+      
+      // إضافة وقت الصلاة
+      const religion = document.getElementById('religion').value;
+      if (religion === 'مسلم' || religion === 'مسيحي' || religion === 'يهودي') {
+        const prayerCard = document.createElement('div');
+        prayerCard.className = 'subject-card fade-in';
+        prayerCard.style.borderLeft = '4px solid #3F51B5';
+        prayerCard.innerHTML = `
+          <h4>وقت العبادة</h4>
+          <div class="type" style="background: #3F51B5">نشاط روحاني</div>
+          <div class="time-indicator">
+            <i class="fas fa-clock" style="color: #3F51B5"></i>
+            <span>5 مرات يومياً (15 دقيقة لكل صلاة)</span>
+          </div>
+          <div class="subject-image" onclick="openImageSelector('subject')">
+            <img src="https://images.unsplash.com/photo-1519735777090-ec97162dc266?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="الصلاة">
+          </div>
+        `;
+        container.appendChild(prayerCard);
+        totalMinutes += 75; // 5 صلوات × 15 دقيقة
+      }
+      
+      // إضافة وقت الراحة
+      const restCard = document.createElement('div');
+      restCard.className = 'subject-card fade-in';
+      restCard.style.borderLeft = '4px solid #FF9800';
+      restCard.innerHTML = `
+        <h4>الراحة والترفيه</h4>
+        <div class="type" style="background: #FF9800">نشاط ترفيهي</div>
+        <div class="time-indicator">
+          <i class="fas fa-clock" style="color: #FF9800"></i>
+          <span>2 ساعة</span>
+        </div>
+        <div class="subject-image" onclick="openImageSelector('subject')">
+          <img src="https://images.unsplash.com/photo-1501555088652-021faa106b9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="الراحة">
+        </div>
+      `;
+      container.appendChild(restCard);
+      totalMinutes += 120; // وقت الراحة
+      
+      // إضافة وقت النوم
+      const sleepCard = document.createElement('div');
+      sleepCard.className = 'subject-card fade-in';
+      sleepCard.style.borderLeft = '4px solid #607D8B';
+      sleepCard.innerHTML = `
+        <h4>النوم</h4>
+        <div class="type" style="background: #607D8B">نشاط استرخاء</div>
+        <div class="time-indicator">
+          <i class="fas fa-clock" style="color: #607D8B"></i>
+          <span>7 ساعات</span>
+        </div>
+      `;
+      container.appendChild(sleepCard);
+      totalMinutes += 420; // وقت النوم 7 ساعات
+      
+      // التحقق من الوقت
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      
+      if (totalMinutes > 1440) {
+        const extraMinutes = totalMinutes - 1440;
+        const extraHours = Math.floor(extraMinutes / 60);
+        const extraMins = extraMinutes % 60;
+        
+        timeMessages.innerHTML = `
+          <div class="time-message error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+              <strong>تحذير: لقد تجاوزت الحد الأقصى لليوم (24 ساعة)</strong>
+              <p>لديك ${extraHours} ساعة و ${extraMins} دقيقة زائدة عن الحد اليومي. يرجى تعديل جدولك.</p>
+            </div>
+          </div>
+        `;
+      } else if (totalMinutes < 1440) {
+        const remainingMinutes = 1440 - totalMinutes;
+        const remainingHours = Math.floor(remainingMinutes / 60);
+        const remainingMins = remainingMinutes % 60;
+        
+        timeMessages.innerHTML = `
+          <div class="time-message warning">
+            <i class="fas fa-lightbulb"></i>
+            <div>
+              <strong>اقتراح: لديك وقت إضافي</strong>
+              <p>لديك ${remainingHours} ساعة و ${remainingMins} دقيقة متبقية في يومك. يمكنك استغلالها في:</p>
+              <ul>
+                <li>قراءة كتاب أو مقال مفيد</li>
+                <li>تعلم مهارة جديدة</li>
+                <li>قضاء وقت مع العائلة</li>
+                <li>ممارسة هواية مفضلة</li>
+                <li>الاسترخاء والتأمل</li>
+              </ul>
+            </div>
+          </div>
+        `;
+      }
+      
+      // تحديث إحصائيات الوقت
+            document.getElementById('totalTime').textContent = 
+        `${hours} ساعة ${minutes} دقيقة`;
+      document.getElementById('subjectCountValue').textContent = 
+        `${count} مواد`;
+      document.getElementById('sportTime').textContent = 
+        `${sportMinutes} دقيقة`;
+      document.getElementById('workTime').textContent = 
+        `${workHours} ساعة`;
+      document.getElementById('sleepTime').textContent = 
+        '7 ساعات';
+      
+      // تحديث الدائرة البيانية
+      updateCircleChart(subjectsData, sportMinutes, workHours, totalMinutes);
+      
+      // الانتقال إلى صفحة الجدول
+      switchPage('schedule');
+    }
+    
+    // اقتراح وقت للمادة
+    function suggestTime(startMinutes, duration) {
+      // بداية اليوم الساعة 8 صباحاً
+      const startHour = 7;
+      const startTime = new Date();
+      startTime.setHours(startHour, 0, 0, 0);
+      
+      // حساب وقت البداية
+      startTime.setMinutes(startTime.getMinutes() + startMinutes);
+      
+      // حساب وقت النهاية
+      const endTime = new Date(startTime);
+      endTime.setMinutes(endTime.getMinutes() + duration);
+      
+      // تنسيق الوقت للعرض
+      const formatTime = (date) => {
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const period = hours >= 12 ? 'مساءً' : 'صباحاً';
+        const formattedHours = hours % 12 || 12;
+        return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+      };
+      
+      // تنسيق الوقت لاستخدامه في المنبهات (24 ساعة)
+      const formatTime24 = (date) => {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      };
+      
+      return {
+        display: `${formatTime(startTime)} - ${formatTime(endTime)}`,
+        start: formatTime24(startTime),
+        end: formatTime24(endTime)
+      };
+    }
+    
+    // تحديث الدائرة البيانية
+    function updateCircleChart(subjectsData, sportMinutes, workHours, totalMinutes) {
+      const legendContainer = document.getElementById('chartLegend');
+      legendContainer.innerHTML = '';
+      
+      // حساب إجمالي الوقت للدراسة
+      let studyMinutes = 0;
+      subjectsData.forEach(subject => studyMinutes += subject.duration);
+      
+      // تحديث الوقت الإجمالي في الدائرة
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      
+      // إعداد بيانات للرسم البياني
+      const categories = [
+        { name: "الدراسة", minutes: studyMinutes, color: "#4CAF50" },
+        { name: "العمل/الدراسة", minutes: workHours * 60, color: "#FF5722" },
+        { name: "الرياضة", minutes: sportMinutes, color: "#9C27B0" },
+        { name: "العبادة", minutes: 75, color: "#3F51B5" },
+        { name: "الراحة", minutes: 120, color: "#FF9800" },
+        { name: "النوم", minutes: 420, color: "#607D8B" }
+      ];
+      
+      let labels = [];
+      let data = [];
+      let colors = [];
+      
+      categories.forEach(cat => {
+        if (cat.minutes > 0) {
+          labels.push(cat.name);
+          data.push(cat.minutes);
+          colors.push(cat.color);
+          
+          const legendItem = document.createElement('div');
+          legendItem.className = 'legend-item';
+          legendItem.innerHTML = `
+            <div class="legend-color" style="background: ${cat.color}"></div>
+            <span>${cat.name}</span>
+          `;
+          legendContainer.appendChild(legendItem);
+        }
+      });
+      
+      // إنشاء الرسم البياني
+      const ctx = document.getElementById('timeChart').getContext('2d');
+      
+      if (window.timeChart) {
+        window.timeChart.destroy();
+      }
+      
+      window.timeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const hours = Math.floor(value / 60);
+                  const minutes = value % 60;
+                  return `${label}: ${hours} ساعة ${minutes} دقيقة`;
+                }
+              }
+            }
+          },
+          cutout: '60%'
+        }
+      });
+    }
+    
+    // تفعيل منبهات الدراسة التلقائية
+    function activateStudyAlarms() {
+      if (!window.studySessions || window.studySessions.length === 0) {
+        alert('الرجاء إنشاء جدول الدراسة أولاً');
+        return;
+      }
+      
+      // إضافة المنبهات إلى القائمة
+      const alarmsList = document.getElementById('alarmsList');
+      alarmsList.innerHTML = '';
+      
+      window.studySessions.forEach(session => {
+        const alarmCard = document.createElement('div');
+        alarmCard.className = 'alarm-card';
+        alarmCard.innerHTML = `
+          <div class="alarm-info">
+            <div class="alarm-icon">
+              <i class="fas fa-bell"></i>
+            </div>
+            <div class="alarm-details">
+              <h4>${session.name}</h4>
+              <p>من ${session.start} إلى ${session.end}</p>
+            </div>
+          </div>
+          <div class="alarm-actions">
+            <div class="alarm-time">${session.start}</div>
+            <button class="btn btn-icon">
+              <i class="fas fa-toggle-on" style="color: #4CAF50;"></i>
+            </button>
+          </div>
+        `;
+        alarmsList.appendChild(alarmCard);
+      });
+      
+      // إظهار رسالة تأكيد
+      document.getElementById('alarmState').innerHTML = `
+        <i class="fas fa-check-circle" style="color: #4CAF50;"></i>
+        <h3>تم تفعيل المنبهات بنجاح</h3>
+        <p>تم تفعيل ${window.studySessions.length} منبهات حسب جدولك</p>
+      `;
+      
+      alert('تم تفعيل جميع المنبهات حسب الجدول الزمني!');
+    }
+    
+    // رفع نغمة مخصصة
+    function handleRingtoneUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          // تخزين النغمة في localStorage
+          localStorage.setItem('customRingtone', e.target.result);
+          document.getElementById('selectedRingtoneName').textContent = file.name;
+          alert('تم تعيين النغمة المخصصة بنجاح!');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    // ضبط منبه حقيقي
+    function setRealAlarm(type, title, icon, message) {
+      // تحديد نغمة التنبيه
+      let soundSrc;
+      const customTone = localStorage.getItem('customRingtone');
+      
+      if (customTone) {
+        soundSrc = customTone;
+      } else {
+        soundSrc = ringtones[document.getElementById('ringtoneSelect').value] || ringtones['1'];
+      }
+      
+      // إعداد المنبه
+      document.getElementById('alarmTitle').textContent = title;
+      document.getElementById('alarmIcon').className = icon;
+      document.getElementById('alarmMessage').textContent = message;
+      
+      // تشغيل الصوت
+      const alarmSound = document.getElementById('alarmSound');
+      alarmSound.src = soundSrc;
+      alarmSound.play();
+      
+      // إظهار المنبه
+      document.getElementById('realAlarm').style.display = 'flex';
+      
+      // إضافة المنبه إلى القائمة
+      addAlarm(title, icon, message);
+    }
+    
+    // إضافة منبه
+    function addAlarm(title, icon, message) {
+      const alarmsList = document.getElementById('alarmsList');
+      
+      if (alarmsList.innerHTML.includes('لا توجد منبهات')) {
+        alarmsList.innerHTML = '';
+      }
+      
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      
+      const alarmCard = document.createElement('div');
+      alarmCard.className = 'alarm-card';
+      alarmCard.innerHTML = `
+        <div class="alarm-info">
+          <div class="alarm-icon">
+            <i class="${icon}"></i>
+          </div>
+          <div class="alarm-details">
+            <h4>${title}</h4>
+            <p>${message}</p>
+          </div>
+        </div>
+        <div class="alarm-actions">
+          <div class="alarm-time">${hours}:${minutes}</div>
+          <button class="btn btn-icon" onclick="deleteAlarm(this)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+      
+      alarmsList.appendChild(alarmCard);
+    }
+    
+    // حذف منبه
+    function deleteAlarm(button) {
+      const alarmCard = button.closest('.alarm-card');
+      alarmCard.remove();
+      
+      const alarmsList = document.getElementById('alarmsList');
+      if (alarmsList.children.length === 0) {
+        alarmsList.innerHTML = '<p style="text-align: center; padding: 2rem; color: #777;">لا توجد منبهات مضافة بعد</p>';
+      }
+    }
+    
+    // إيقاف المنبه
+    function stopAlarm() {
+      const alarmSound = document.getElementById('alarmSound');
+      alarmSound.pause();
+      alarmSound.currentTime = 0;
+      document.getElementById('realAlarm').style.display = 'none';
+    }
+    
+    // تأجيل المنبه
+    function snoozeAlarm() {
+      stopAlarm();
+      setTimeout(() => {
+        const alarmSound = document.getElementById('alarmSound');
+        alarmSound.play();
+        document.getElementById('realAlarm').style.display = 'flex';
+      }, 5 * 60 * 1000); // 5 دقائق
+    }
+    
+    // تعيين نغمة التنبيه
+    function setRingtone(value) {
+      alert(`تم تعيين النغمة ${value} بنجاح!`);
+    }
+    
+    // حذف جميع البيانات
+    function clearData() {
+      if (confirm('هل أنت متأكد من رغبتك في حذف جميع المهام والبيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        document.getElementById('subjectContainer').innerHTML = '';
+        document.getElementById('studyPlan').innerHTML = `
+          <div class="subject-card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+            <i class="fas fa-calendar-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <h3>لم تقم بإنشاء جدول بعد</h3>
+            <p>قم بإدخال المواد والأنشطة في صفحة "المواد والأنشطة" ثم اضغط على "إنشاء جدول الدراسة"</p>
+          </div>
+        `;
+        document.getElementById('subjectCount').value = '';
+        document.getElementById('sportMinutes').value = '';
+        document.getElementById('workHours').value = '';
+        
+        // إعادة تعيين الدائرة البيانية
+        document.getElementById('chartLegend').innerHTML = `
+          <div class="legend-item">
+            <div class="legend-color" style="background: #4CAF50;"></div>
+            <span>سيتم عرض المواد هنا</span>
+          </div>
+        `;
+        
+        // إعادة تعيين الإحصائيات
+        document.getElementById('totalTime').textContent = '0 ساعة';
+        document.getElementById('subjectCountValue').textContent = '0 مواد';
+        document.getElementById('sportTime').textContent = '0 دقيقة';
+        document.getElementById('workTime').textContent = '0 ساعة';
+        document.getElementById('sleepTime').textContent = '0 ساعة';
+        
+        document.getElementById('timeMessages').innerHTML = '';
+      }
+    }
+    
+    // إعادة تعيين التطبيق
+        function resetApp() {
+      if (confirm('هل أنت متأكد من رغبتك في إعادة تعيين التطبيق؟ سيتم حذف جميع البيانات.')) {
+        // إعادة تعيين جميع الحقول
+        document.getElementById('userName').value = '';
+        document.getElementById('userAge').value = '';
+        document.getElementById('religion').value = '';
+        document.getElementById('userType').value = '';
+        document.getElementById('userEmail').value = '';
+        document.getElementById('subjectCount').value = '';
+        document.getElementById('sportMinutes').value = '';
+        document.getElementById('workHours').value = '';
+        document.getElementById('profile-img').src = '';
+        document.getElementById('username').textContent = 'المستخدم';
+        document.getElementById('userNameText').textContent = 'المستخدم';
+        document.getElementById('userNameTextMobile').textContent = 'المستخدم';
+        
+        // إعادة تعيين الجدول
+        clearData();
+        
+        alert('تم إعادة تعيين التطبيق بنجاح!');
+      }
+    }
+    
+    // حفظ البيانات
+    function saveData() {
+      const userName = document.getElementById('userName').value;
+      if (!userName) {
+        alert('الرجاء إدخال اسمك أولاً');
+        return;
+      }
+      
+      alert(`تم حفظ بيانات ${userName} بنجاح! يمكنك العودة إليها في أي وقت.`);
+    }
+    
+    // تصدير الجدول كملف PDF
+    function exportSchedule() {
+      if (!window.studySessions || window.studySessions.length === 0) {
+        alert('لا يوجد جدول لتصديره. يرجى إنشاء جدول أولاً');
+        return;
+      }
+      
+      // إنشاء محتوى للتصدير
+      const userName = document.getElementById('userName').value || 'المستخدم';
+      const date = new Date().toLocaleDateString('ar-EG');
+      
+      let content = `
+        <div class="print-schedule">
+          <div class="schedule-logo">
+            <i class="fas fa-graduation-cap"></i>
+            <h2>SmartStudy - جدول الدراسة</h2>
+          </div>
+          <p>تم إنشاؤه بواسطة: ${userName}</p>
+          <p>التاريخ: ${date}</p>
+          
+          <div class="schedule-grid">
+      `;
+      
+      window.studySessions.forEach(session => {
+        content += `
+          <div class="schedule-card">
+            <h4>${session.name}</h4>
+            <p><i class="fas fa-clock"></i> من ${session.start} إلى ${session.end}</p>
+          </div>
+        `;
+      });
+      
+      content += `
+          </div>
+        </div>
+      `;
+      
+      // إنشاء عنصر مؤقت
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.innerHTML = content;
+      document.body.appendChild(tempDiv);
+      
+      // استخدام html2canvas لالتقاط الصورة
+      html2canvas(tempDiv).then(canvas => {
+        // تحويل Canvas إلى صورة
+        const imgData = canvas.toDataURL('image/png');
+        
+        // إنشاء PDF
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 190;
+        const pageHeight = 297;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 10;
+        
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        // إضافة صفحات إضافية إذا لزم الأمر
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        // حفظ الملف
+        pdf.save(`جدول_الدراسة_${userName}_${date}.pdf`);
+        
+        // إزالة العنصر المؤقت
+        document.body.removeChild(tempDiv);
+        
+        alert('تم تصدير الجدول بنجاح! سيبدأ التحميل الآن.');
+      });
+    }
+    
+    // تغيير سمة التطبيق
+    function changeTheme(color) {
+      const root = document.documentElement;
+      
+      switch(color) {
+        case 'blue':
+          root.style.setProperty('--primary', '#2196F3');
+          root.style.setProperty('--primary-dark', '#1976D2');
+          root.style.setProperty('--accent', '#FF9800');
+          break;
+        case 'purple':
+          root.style.setProperty('--primary', '#9C27B0');
+          root.style.setProperty('--primary-dark', '#7B1FA2');
+          root.style.setProperty('--accent', '#FFC107');
+          break;
+        case 'orange':
+          root.style.setProperty('--primary', '#FF5722');
+          root.style.setProperty('--primary-dark', '#E64A19');
+          root.style.setProperty('--accent', '#4CAF50');
+          break;
+        case 'red':
+          root.style.setProperty('--primary', '#F44336');
+          root.style.setProperty('--primary-dark', '#D32F2F');
+          root.style.setProperty('--accent', '#FFEB3B');
+          break;
+        case 'pink':
+          root.style.setProperty('--primary', '#E91E63');
+          root.style.setProperty('--primary-dark', '#C2185B');
+          root.style.setProperty('--accent', '#00BCD4');
+          break;
+        case 'teal':
+          root.style.setProperty('--primary', '#009688');
+          root.style.setProperty('--primary-dark', '#00796B');
+          root.style.setProperty('--accent', '#FFC107');
+          break;
+        case 'indigo':
+          root.style.setProperty('--primary', '#3F51B5');
+          root.style.setProperty('--primary-dark', '#303F9F');
+          root.style.setProperty('--accent', '#FF9800');
+          break;
+        case 'deep-purple':
+          root.style.setProperty('--primary', '#673AB7');
+          root.style.setProperty('--primary-dark', '#512DA8');
+          root.style.setProperty('--accent', '#00BCD4');
+          break;
+        case 'amber':
+          root.style.setProperty('--primary', '#FFC107');
+          root.style.setProperty('--primary-dark', '#FFA000');
+          root.style.setProperty('--accent', '#2196F3');
+          break;
+        case 'brown':
+          root.style.setProperty('--primary', '#795548');
+          root.style.setProperty('--primary-dark', '#5D4037');
+          root.style.setProperty('--accent', '#FFC107');
+          break;
+        default: // green
+          root.style.setProperty('--primary', '#009688');
+          root.style.setProperty('--primary-dark', '#00796B');
+          root.style.setProperty('--accent', '#FF5722');
+      }
+      
+      // تحديث لون الهيدر والفوتر
+      document.querySelector('header').style.background = 
+        `linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%)`;
+      document.querySelector('footer').style.background = 
+        `linear-gradient(to right, var(--primary-dark), var(--primary)`;
+        
+      // تخزين السمة المختارة
+      localStorage.setItem('selectedTheme', color);
+    }
+    
+    // عند التحميل، تطبيق السمة المحفوظة
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('selectedTheme');
+      if (savedTheme) {
+        changeTheme(savedTheme);
+        document.getElementById('themeColor').value = savedTheme;
+      }
+    });
+    
+    // صفحة المذكرة اليومية
+        function saveDiary() {
+      const diaryDate = document.getElementById('diaryDate').value;
+      const diaryText = document.getElementById('diaryText').value;
+      
+      if (!diaryDate) {
+        alert('الرجاء تحديد تاريخ اليوم');
+        return;
+      }
+      
+      if (!diaryText) {
+        alert('الرجاء إدخال محتوى المذكرة');
+        return;
+      }
+      
+      // تخزين المذكرة في localStorage
+      const diaryEntry = {
+        date: diaryDate,
+        text: diaryText,
+        timestamp: new Date().getTime()
+      };
+      
+      // الحصول على المذكرات السابقة
+      let diaryEntries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+      
+      // إضافة المذكرة الجديدة
+      diaryEntries.push(diaryEntry);
+      
+      // حفظ في localStorage
+      localStorage.setItem('diaryEntries', JSON.stringify(diaryEntries));
+      
+      // تحديث القائمة
+      updateDiaryList();
+      
+      alert('تم حفظ المذكرة بنجاح!');
+    }
+    
+    // تحديث قائمة المذكرات
+    function updateDiaryList() {
+      const entriesList = document.getElementById('entriesList');
+      entriesList.innerHTML = '';
+      
+      const diaryEntries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+      
+      if (diaryEntries.length === 0) {
+        entriesList.innerHTML = '<p style="text-align: center; padding: 2rem; color: #777;">لا توجد مذكرات سابقة</p>';
+        return;
+      }
+      
+      // فرز المذكرات حسب التاريخ
+      diaryEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      diaryEntries.forEach(entry => {
+        const entryDate = new Date(entry.date);
+        const formattedDate = entryDate.toLocaleDateString('ar-EG', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const entryElement = document.createElement('div');
+        entryElement.className = 'diary-entry';
+        entryElement.innerHTML = `
+          <div class="diary-header">
+            <h4>${formattedDate}</h4>
+            <button class="btn btn-icon" onclick="deleteDiaryEntry(${entry.timestamp})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <p>${entry.text}</p>
+        `;
+        
+        entriesList.appendChild(entryElement);
+      });
+    }
+    
+    // حذف مذكرة
+    function deleteDiaryEntry(timestamp) {
+      if (confirm('هل أنت متأكد من رغبتك في حذف هذه المذكرة؟')) {
+        let diaryEntries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+        diaryEntries = diaryEntries.filter(entry => entry.timestamp !== timestamp);
+        localStorage.setItem('dieryEntries', JSON.stringify(diaryEntries));
+        updateDiaryList();
+      }
+    }
+    
+    // مساعدة الذكاء الاصطناعي
+    function askAI() {
+      const diaryText = document.getElementById('diaryText').value;
+      
+      if (!diaryText) {
+        alert('الرجاء إدخال محتوى المذكرة أولاً');
+        return;
+      }
+      
+      // إظهار رسالة تحميل
+      const aiResponse = document.getElementById('aiResponse');
+      aiResponse.style.display = 'block';
+      document.getElementById('aiText').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري معالجة الطلب...';
+      
+      // محاكاة استجابة الذكاء الاصطناعي
+      setTimeout(() => {
+        const responses = [
+          "نصيحة اليوم: حاول تقسيم وقتك إلى فترات تركيز لمدة 45 دقيقة تليها استراحة لمدة 15 دقيقة لزيادة الإنتاجية.",
+          "اقتراح: بناءً على مذكرتك، يبدو أنك بحاجة إلى المزيد من التنظيم. جرب استخدام تقنية بومودورو لإدارة وقتك.",
+          "ملاحظة: يبدو أنك تقضي وقتاً طويلاً في المهام الصغيرة. حاول تجميع المهام المتشابهة معاً لتوفير الوقت.",
+          "تلميح: تذكر أن تأخذ استراحات منتظمة للحفاظ على تركيزك وطاقتك طوال اليوم.",
+          "اقتراح: بناءً على مذكرتك، قد يكون من المفيد تخصيص وقت محدد للرد على الرسائل والبريد الإلكتروني بدلاً من فحصها باستمرار."
+        ];
+        
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        document.getElementById('aiText').innerHTML = randomResponse;
+      }, 2000);
+    }
+    
+    // تهيئة التطبيق
+    document.addEventListener('DOMContentLoaded', function() {
+      // تحديث قائمة المذكرات عند تحميل الصفحة
+      updateDiaryList();
+      
+      // تهيئة تاريخ اليوم في المذكرة
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('diaryDate').value = today;
+      
+      // تفعيل زر التثبيت
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(registration => {
+            console.log('ServiceWorker registered with scope:', registration.scope);
+          })
+          .catch(error => {
+            console.log('ServiceWorker registration failed:', error);
+          });
+      }
+      
+      let deferredPrompt;
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installButton').style.display = 'block';
+        document.getElementById('installAppButton').style.display = 'inline-block';
+      });
+      
+      document.getElementById('installButton').addEventListener('click', () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('User accepted the install prompt');
+            } else {
+              console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+          });
+        }
+      });
+      
+      document.getElementById('installAppButton').addEventListener('click', () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              console.log('User accepted the install prompt');
+            } else {
+              console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
